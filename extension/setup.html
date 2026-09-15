@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Local PDF Reload setup</title>
+  <style>
+    body { max-width: 42rem; margin: 3rem auto; padding: 0 1.25rem;
+           font: 16px/1.55 system-ui, sans-serif; color: CanvasText; background: Canvas; }
+    h1 { font-size: 1.5rem; }
+    .card { padding: 1rem 1.25rem; margin: 1rem 0; border: 1px solid GrayText;
+            border-radius: .5rem; }
+    a.button { display: inline-block; padding: .55rem .9rem; border-radius: .35rem;
+               background: ButtonText; color: ButtonFace; text-decoration: none; }
+    #status { padding: .8rem 1rem; border-radius: .4rem; background: ButtonFace; }
+  </style>
+</head>
+<body>
+  <h1>Local PDF Reload setup</h1>
+  <p id="status">Checking the helper…</p>
+  <div class="card" id="linux">
+    <h2>Install the helper</h2>
+    <p>Open a terminal and paste this command. It installs the helper for your
+      account and does not need administrator access:</p>
+    <pre><code>curl -fsSL https://github.com/dynaroars/pdf-reload/releases/latest/download/install-pdf-reload.sh | bash</code></pre>
+    <p>The script checks its downloads and explains any missing system
+      requirement. Python is handled by the installer; you do not need to run
+      the Python helper yourself.</p>
+  </div>
+  <p>After installation, return to your PDF and click the toolbar button again.
+    The helper runs only while a PDF is being watched and sends file-change
+    notices, never PDF contents.</p>
+  <script src="setup.js"></script>
+</body>
+</html>
