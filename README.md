@@ -26,6 +26,8 @@ The helper sends file-change notices only; it does not send PDF contents over
 the network. Watching stops when you disable the button, close the tab, or
 navigate away.
 
+Licensed under the [MIT License](LICENSE).
+
 ## Development
 
 This project currently targets Linux and requires Python 3.11+. To build the
