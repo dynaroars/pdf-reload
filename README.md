@@ -18,9 +18,9 @@ helper is needed because Firefox extensions cannot directly watch files on disk.
    curl -fsSL https://github.com/dynaroars/pdf-reload/releases/latest/download/install-pdf-reload.sh | bash
    ```
 
-   The installer registers the helper for your account and verifies its
+   The installer, which only needs to **run ONCE**, registers the helper for your account and verifies its
    checksum. No administrator access is needed.
-3. Open a local `.pdf` in Firefox and click the Local PDF Reload toolbar button.
+3. After installing, open a local `.pdf` in Firefox and click the Local PDF Reload toolbar button (in your Firefox extension list, you can also pin it to the tool bar for easier access).
 
 The helper sends file-change notices only; it does not send PDF contents over
 the network. Watching stops when you disable the button, close the tab, or
