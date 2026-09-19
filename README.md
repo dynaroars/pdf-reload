@@ -10,7 +10,7 @@ scroll position.
 The add-on must be signed by Mozilla before regular Firefox can install it. The
 helper is needed because Firefox extensions cannot directly watch files on disk.
 
-1. Install the add-on from F[irefox add-on website](https://addons.mozilla.org/en-US/firefox/addon/local-pdf-reload/).
+1. Install the add-on from [Firefox add-on website](https://addons.mozilla.org/en-US/firefox/addon/local-pdf-reload/).
 2. After installing, you will need open the extension setup page
    and paste this command into a terminal:
 
