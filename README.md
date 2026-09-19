@@ -7,9 +7,6 @@ scroll position.
 
 ## Install
 
-The add-on must be signed by Mozilla before regular Firefox can install it. The
-helper is needed because Firefox extensions cannot directly watch files on disk.
-
 1. Install the add-on from [Firefox add-on website](https://addons.mozilla.org/en-US/firefox/addon/local-pdf-reload/).
 2. After installing, you will need open the extension setup page
    and paste this command into a terminal:
@@ -18,7 +15,8 @@ helper is needed because Firefox extensions cannot directly watch files on disk.
    curl -fsSL https://github.com/dynaroars/pdf-reload/releases/latest/download/install-pdf-reload.sh | bash
    ```
 
-   The installer, which only needs to **run ONCE**, registers the helper and verifies its  checksum. No administrator access is needed.
+   The installer, which only needs to **run ONCE**, registers the helper and verifies its  checksum. The
+helper is needed because Firefox extensions cannot directly watch files on disk. No administrator access is needed.
    
 4. After installing, open a local `.pdf` in Firefox and click the Local PDF Reload toolbar button (in your Firefox extension list, you can also pin it to the tool bar for easier access).
 
