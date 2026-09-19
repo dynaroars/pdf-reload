@@ -8,8 +8,7 @@ scroll position.
 ## Install
 
 1. Install the add-on from [Firefox add-on website](https://addons.mozilla.org/en-US/firefox/addon/local-pdf-reload/).
-2. After installing, you will need open the extension setup page
-   and paste this command into a terminal:
+2. After installing, you will to paste this command into a terminal and run it:
 
    ```sh
    curl -fsSL https://github.com/dynaroars/pdf-reload/releases/latest/download/install-pdf-reload.sh | bash
