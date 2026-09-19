@@ -65,5 +65,4 @@ def atomic_write(path, data, mode):
 atomic_write(host, HOST_SOURCE, 0o700)
 atomic_write(target, contents.encode(), 0o600)
 print(f"Installed helper: {host}\nRegistered with Firefox: {target}\n"
-      "You can now remove the downloaded installer.\n"
       "Open a local PDF in Firefox and click Local PDF Reload to watch it.")
