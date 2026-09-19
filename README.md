@@ -10,17 +10,17 @@ scroll position.
 The add-on must be signed by Mozilla before regular Firefox can install it. The
 helper is needed because Firefox extensions cannot directly watch files on disk.
 
-1. Install the signed XPI from the [latest release][release].
-2. If Firefox reports that the helper is missing, open the extension setup page
+1. Install the add-on from F[irefox add-on website](https://addons.mozilla.org/en-US/firefox/addon/local-pdf-reload/).
+2. After installing, you will need open the extension setup page
    and paste this command into a terminal:
 
    ```sh
    curl -fsSL https://github.com/dynaroars/pdf-reload/releases/latest/download/install-pdf-reload.sh | bash
    ```
 
-   The installer, which only needs to **run ONCE**, registers the helper for your account and verifies its
-   checksum. No administrator access is needed.
-3. After installing, open a local `.pdf` in Firefox and click the Local PDF Reload toolbar button (in your Firefox extension list, you can also pin it to the tool bar for easier access).
+   The installer, which only needs to **run ONCE**, registers the helper and verifies its  checksum. No administrator access is needed.
+   
+4. After installing, open a local `.pdf` in Firefox and click the Local PDF Reload toolbar button (in your Firefox extension list, you can also pin it to the tool bar for easier access).
 
 The helper sends file-change notices only; it does not send PDF contents over
 the network. Watching stops when you disable the button, close the tab, or
