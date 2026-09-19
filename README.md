@@ -17,7 +17,7 @@ scroll position.
    The installer, which only needs to **run ONCE**, registers the helper and verifies its  checksum. The
 helper is needed because Firefox extensions cannot directly watch files on disk. No administrator access is needed.
    
-4. To use:  open a local `.pdf` in Firefox and click the Local PDF Reload toolbar button (in your Firefox extension list, you can also pin it to the tool bar for easier access), make sure to lick it so that the icon changed to have the word ON on top of it.  
+*To use*: open a local .pdf in Firefox and click the Local PDF Reload toolbar button (in your Firefox extension list, you can also pin it to the tool bar for easier access).  Make sure to click it so that the icon changed to have the word *ON* on top of it. Now you can make changes to the pdf and Firefox will auto update the file.
 
 The helper sends file-change notices only; it does not send PDF contents over
 the network. Watching stops when you disable the button, close the tab, or
