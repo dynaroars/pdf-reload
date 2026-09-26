@@ -88,6 +88,14 @@ action.action.dispatchClick(window.gBrowser.selectedTab, {button: 0, modifiers: 
 return true;
 """
 
+BADGE = """
+const {ExtensionParent} = ChromeUtils.importESModule('resource://gre/modules/ExtensionParent.sys.mjs');
+const extension = WebExtensionPolicy.getByID('pdf-reload@local').extension;
+const action = ExtensionParent.apiManager.global.browserAction.for(extension).action;
+const tab = window.gBrowser.selectedTab;
+return {text: action.getProperty(tab, 'badgeText'), title: action.getProperty(tab, 'title')};
+"""
+
 
 def main():
     subprocess.run([sys.executable, str(ROOT / "scripts/package.py")], check=True)
@@ -158,6 +166,7 @@ def main():
                 before = client.execute(STATE)
                 assert before["page"] == 3, before
                 client.execute(CLICK, context="chrome")
+                wait_for(lambda: client.execute(BADGE, context="chrome")["text"] == "ON")
                 time.sleep(0.5)
                 compile_pdf(2)
                 after = wait_for(lambda: (
@@ -168,6 +177,9 @@ def main():
                 assert after["page"] == before["page"], (before, after)
                 assert after["scale"] == before["scale"], (before, after)
                 assert abs(after["top"] - before["top"]) <= 2, (before, after)
+                # Firefox clears per-tab badges on reload; the extension must restore it.
+                badge = client.execute(BADGE, context="chrome")
+                assert badge == {"text": "ON", "title": "Watching this PDF. Click to stop."}, badge
                 print(json.dumps({"before": before, "after": after}, indent=2))
                 print("PASS: native helper -> extension -> real PDF reload; page, zoom, scroll retained.")
                 client.execute(CLICK, context="chrome")

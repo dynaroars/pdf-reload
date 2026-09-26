@@ -1,5 +1,7 @@
 /* Firefox handles PDF position restoration when this is a genuine tab reload. */
 const watched = new Map();
+// Firefox clears per-tab badges when a tab loads, including our own reloads.
+const badges = new Map();
 let port = null;
 
 function openSetup() {
@@ -18,6 +20,12 @@ function pdfUrl(value) {
 }
 
 function badge(tabId, text, title) {
+  badges.set(tabId, { text, title });
+  showBadge(tabId);
+}
+
+function showBadge(tabId) {
+  const { text, title } = badges.get(tabId);
   // Tabs can close while a native message is in flight.
   browser.browserAction.setBadgeText({ tabId, text }).catch(() => {});
   browser.browserAction.setTitle({ tabId, title }).catch(() => {});
@@ -90,6 +98,7 @@ browser.browserAction.onClicked.addListener(tab => {
 });
 
 browser.tabs.onRemoved.addListener(tabId => {
+  badges.delete(tabId);
   if (watched.delete(tabId)) sync();
 });
 
@@ -98,5 +107,7 @@ browser.tabs.onUpdated.addListener((tabId, change) => {
     watched.delete(tabId);
     badge(tabId, "", "Watch this local PDF");
     sync();
+  } else if (change.status === "complete" && watched.has(tabId)) {
+    showBadge(tabId);
   }
 });
