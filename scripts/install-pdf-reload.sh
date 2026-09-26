@@ -20,4 +20,5 @@ if [ -z "$expected" ] || [ "$expected" != "$actual" ]; then
   echo "Checksum verification failed for the helper installer." >&2
   exit 1
 fi
-exec python3 "$temporary"
+# No exec: the EXIT trap must still run to remove the temporary files.
+python3 "$temporary"

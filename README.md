@@ -14,7 +14,7 @@ scroll position.
    curl -fsSL https://github.com/dynaroars/pdf-reload/releases/latest/download/install-pdf-reload.sh | bash
    ```
 
-   The installer, which only needs to **run ONCE**, registers the helper and verifies its  checksum. The
+   The installer, which only needs to **run ONCE**, registers the helper and checks the download against the release's `SHA256SUMS` to catch corrupted transfers (this is not a signature). The
 helper is needed because Firefox extensions cannot directly watch files on disk. No administrator access is needed.
    
 *To use*: open a local .pdf in Firefox and click the Local PDF Reload toolbar button (in your Firefox extension list, you can also pin it to the tool bar for easier access).  Make sure to click it so that the icon changed to have the word *ON* on top of it. Now you can make changes to the pdf and Firefox will auto update the file.

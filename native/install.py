@@ -18,6 +18,18 @@ parser.add_argument("--install-dir", type=Path,
 args = parser.parse_args()
 if sys.version_info < (3, 11):
     parser.error("Python 3.11 or newer is required")
+# Firefox resolves "env python3" with its own PATH, which may find an older
+# Python than the one verified above, so pin this interpreter in the shebang.
+# Keep the unversioned path so distro upgrades don't break it, but avoid
+# virtualenvs, which may be deleted later.
+interpreter = os.path.abspath(
+    sys._base_executable if sys.prefix != sys.base_prefix else sys.executable)
+if not interpreter or any(c.isspace() for c in interpreter):
+    parser.error(f"Cannot use a Python path containing spaces: {interpreter!r}")
+shebang, _, body = HOST_SOURCE.partition(b"\n")
+assert shebang.startswith(b"#!")
+HOST_BYTES = b"#!" + os.fsencode(interpreter) + b"\n" + body
+KNOWN_HOSTS = (HOST_SOURCE, HOST_BYTES)
 host = args.install_dir.resolve() / "pdf_reload.py"
 manifest = {
     "name": "local_pdf_reload",
@@ -28,23 +40,10 @@ manifest = {
 }
 target = args.manifest_dir / "local_pdf_reload.json"
 contents = json.dumps(manifest, indent=2) + "\n"
+# Leave unrelated or manually customized registrations alone.
 if target.exists() and target.read_text() != contents:
-    # Migrate the original prototype registration only when it identifies this
-    # exact helper. Leave unrelated or manually customized registrations alone.
-    try:
-        previous = json.loads(target.read_text())
-        previous_host = Path(previous["path"])
-        same_helper = (
-            previous == {**manifest, "path": str(previous_host)}
-            and previous_host.is_absolute()
-            and previous_host.name == "pdf_reload.py"
-            and previous_host.read_bytes() == HOST_SOURCE
-        )
-    except (OSError, ValueError, TypeError, KeyError):
-        same_helper = False
-    if not same_helper:
-        parser.error(f"Refusing to overwrite a different registration: {target}")
-if host.exists() and not target.exists() and host.read_bytes() != HOST_SOURCE:
+    parser.error(f"Refusing to overwrite a different registration: {target}")
+if host.exists() and not target.exists() and host.read_bytes() not in KNOWN_HOSTS:
     parser.error(f"Refusing to overwrite an unregistered helper: {host}")
 
 
@@ -62,7 +61,7 @@ def atomic_write(path, data, mode):
                 temporary.unlink()
 
 
-atomic_write(host, HOST_SOURCE, 0o700)
+atomic_write(host, HOST_BYTES, 0o700)
 atomic_write(target, contents.encode(), 0o600)
 print(f"Installed helper: {host}\nRegistered with Firefox: {target}\n"
       "Open a local PDF in Firefox and click Local PDF Reload to watch it.")
