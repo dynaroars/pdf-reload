@@ -10,7 +10,7 @@ import struct
 import sys
 import threading
 import time
-from urllib.parse import unquote, urlsplit
+from urllib.parse import unquote_to_bytes, urlsplit
 
 POLL_SECONDS = 0.25
 SETTLE_SECONDS = 1.0
@@ -21,7 +21,8 @@ def path_from_url(url):
     parts = urlsplit(url)
     if parts.scheme != "file" or parts.netloc not in ("", "localhost"):
         raise ValueError("Only local file URLs are supported")
-    path = Path(unquote(parts.path, errors="strict"))
+    # Linux filenames are bytes; Firefox percent-encodes them as-is.
+    path = Path(os.fsdecode(unquote_to_bytes(parts.path)))
     if not path.is_absolute() or path.suffix.lower() != ".pdf" or "\0" in str(path):
         raise ValueError("Expected an absolute PDF path")
     return path
@@ -50,6 +51,12 @@ def pdf_digest(path, expected):
     return digest
 
 
+def describe(error):
+    if isinstance(error, OSError):
+        return error.strerror or "Cannot read PDF"
+    return str(error)
+
+
 class Watch:
     def __init__(self, url, now):
         self.url = url
@@ -64,31 +71,44 @@ class Watch:
             self.pending = signature(self.path.stat())
             self.digest = pdf_digest(self.path, self.pending)
             self.checked = self.pending
-        except (OSError, ValueError):
-            pass
+        except (OSError, ValueError) as error:
+            self.error = describe(error)
+
+    def status(self):
+        if self.error:
+            return {"type": "error", "url": self.url, "message": self.error}
+        return {"type": "ready", "url": self.url}
 
     def tick(self, now):
         try:
             current = signature(self.path.stat())
-            if current != self.pending:
-                self.pending, self.since = current, now
-                return None
-            if current == self.checked or now - self.since < SETTLE_SECONDS:
-                return None
+        except OSError as error:
+            # Keep the old digest across deletion/recreation.
+            self.pending, self.since = None, now
+            return self.report(error)
+        if current != self.pending:
+            self.pending, self.since = current, now
+            return None
+        if current == self.checked or now - self.since < SETTLE_SECONDS:
+            return None
+        try:
             digest = pdf_digest(self.path, current)
-            changed = digest != self.digest
-            self.digest, self.checked, self.error = digest, current, None
-            return {"type": "changed" if changed else "ready", "url": self.url}
-        except (OSError, ValueError) as error:
-            # Keep the old digest across deletion/recreation and failed compiles.
-            message = str(error)
-            if isinstance(error, OSError):
-                self.pending, self.since = None, now
-                message = error.strerror or "Cannot read PDF"
-            if message != self.error:
-                self.error = message
-                return {"type": "error", "url": self.url, "message": message}
-        return None
+        except OSError as error:
+            return self.report(error)
+        except ValueError as error:
+            # Don't reread an unchanged incomplete PDF; any write changes the signature.
+            self.checked = current
+            return self.report(error)
+        changed = digest != self.digest
+        self.digest, self.checked, self.error = digest, current, None
+        return {"type": "changed" if changed else "ready", "url": self.url}
+
+    def report(self, error):
+        message = describe(error)
+        if message == self.error:
+            return None
+        self.error = message
+        return self.status()
 
 
 def read_exact(stream, length):
@@ -107,7 +127,11 @@ def read_messages(stream, inbox):
             length = struct.unpack("=I", read_exact(stream, 4))[0]
             if length > MAX_MESSAGE:
                 raise ValueError("Message too large")
-            inbox.put(json.loads(read_exact(stream, length)))
+            data = read_exact(stream, length)
+            try:
+                inbox.put(json.loads(data))
+            except ValueError:
+                pass  # Framing is intact, so skip the bad message.
     except (EOFError, ValueError, OSError):
         inbox.put(None)
 
@@ -116,6 +140,25 @@ def send(message):
     data = json.dumps(message).encode("utf-8")
     sys.stdout.buffer.write(struct.pack("=I", len(data)) + data)
     sys.stdout.buffer.flush()
+
+
+def update(watches, urls, now):
+    """Return the new watch set and the current state of every watched URL.
+
+    Resending existing states lets a newly added tab learn about an error that
+    was already reported to another tab showing the same PDF.
+    """
+    watches = {url: watch for url, watch in watches.items() if url in urls}
+    events = []
+    for url in urls:
+        if url not in watches:
+            try:
+                watches[url] = Watch(url, now)
+            except (ValueError, OSError) as error:
+                events.append({"type": "error", "url": url, "message": describe(error)})
+                continue
+        events.append(watches[url].status())
+    return watches, events
 
 
 def main():
@@ -131,16 +174,10 @@ def main():
             return
         if isinstance(message, dict) and message.get("type") == "watch":
             urls = message.get("urls")
-            if not isinstance(urls, list) or len(urls) > 256 or not all(isinstance(u, str) for u in urls):
-                continue
-            watches = {url: watch for url, watch in watches.items() if url in urls}
-            for url in urls:
-                if url not in watches:
-                    try:
-                        watches[url] = Watch(url, time.monotonic())
-                        send({"type": "ready", "url": url})
-                    except (ValueError, OSError) as error:
-                        send({"type": "error", "url": url, "message": str(error)})
+            if isinstance(urls, list) and len(urls) <= 256 and all(isinstance(u, str) for u in urls):
+                watches, events = update(watches, urls, time.monotonic())
+                for event in events:
+                    send(event)
         elif isinstance(message, dict) and message.get("type") == "status":
             send({"type": "status"})
         for watch in watches.values():
