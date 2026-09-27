@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Local PDF Reload",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Reload watched local PDFs only when their contents change, using Firefox's built-in viewer.",
   "browser_specific_settings": {
     "gecko": {
